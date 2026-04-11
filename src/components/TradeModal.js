@@ -90,7 +90,7 @@ export default function TradeModal({ symbol, name, onClose }) {
             <p>Fetching market liquidity...</p>
         ) : (
             <div className="modal-body">
-                <p style={{color: 'var(--text-secondary)'}}>Current Market Price: <strong style={{color:'white'}}>${currentPrice.toFixed(2)}</strong></p>
+                <p style={{color: 'var(--text-secondary)'}}>Current Market Price: <strong style={{color:'white'}}>${(currentPrice || 0).toFixed(2)}</strong></p>
                 
                 <div className="input-group" style={{marginTop: '20px'}}>
                     <label>Number of Shares</label>

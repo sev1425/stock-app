@@ -95,8 +95,8 @@ export default function Portfolio() {
                       <span className="holding-qty">{stock.quantity} Shares</span>
                   </div>
                   <div className="holding-stats">
-                      <p>Current Price: <span style={{color: 'white'}}>${stock.currentPrice.toFixed(2)}</span></p>
-                      <p>Avg Buy Price: ${stock.avgPrice.toFixed(2)}</p>
+                      <p>Current Price: <span style={{color: 'white'}}>${(stock.currentPrice || stock.avgPrice || 0).toFixed(2)}</span></p>
+                      <p>Avg Buy Price: ${(stock.avgPrice || 0).toFixed(2)}</p>
                       <hr style={{ borderColor: 'rgba(255,255,255,0.05)', margin: '10px 0' }} />
                       <p>Total Equity: <span style={{color: 'white'}}>${stockEquity.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>
                       <p style={{ color: pPositive ? '#10b981' : '#ef4444' }}>
