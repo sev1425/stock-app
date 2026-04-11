@@ -1,18 +1,22 @@
 import { useState, useEffect } from "react";
+import { useAuth } from '../context/AuthContext';
 
 export default function Portfolio() {
+  const { balance, updateBalance } = useAuth();
   const [holdings, setHoldings] = useState([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // These are static hold amounts, but the prices we will fetch live!
-    const saved = JSON.parse(localStorage.getItem("portfolio")) || [
-        { symbol: "AAPL", quantity: 15, avgPrice: 150 },
-        { symbol: "TSLA", quantity: 5, avgPrice: 180 }
-    ];
+    // Load ACTUAL bought stocks from localstorage
+    const saved = JSON.parse(localStorage.getItem("portfolio")) || [];
     
-    // Fetch live prices for all holdings
     async function loadLivePrices() {
+        if(saved.length === 0) {
+            setHoldings([]);
+            setLoading(false);
+            return;
+        }
+
         const updatedHoldings = await Promise.all(saved.map(async (holding) => {
             try {
                 const res = await fetch(`/api/price?symbol=${holding.symbol}`);
@@ -22,7 +26,7 @@ export default function Portfolio() {
                     currentPrice: data.price
                 };
             } catch {
-                return { ...holding, currentPrice: holding.avgPrice }; // fallback
+                return { ...holding, currentPrice: holding.avgPrice };
             }
         }));
         
@@ -38,16 +42,35 @@ export default function Portfolio() {
   const totalProfit = totalEquity - totalCostBasis;
   const isProfitPositive = totalProfit >= 0;
 
+  const handleDeposit = () => {
+      updateBalance(balance + 5000);
+  };
+
   return (
     <div className="page-content fade-in">
       <header className="page-header">
         <h1>My Portfolio (Live)</h1>
-        <div className="portfolio-summary glass-panel">
-            <h3>Total Equity</h3>
-            <h2 className="total-value">${totalEquity.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
-            <p style={{ color: isProfitPositive ? '#10b981' : '#ef4444', margin: '5px 0 0 0', fontWeight: '500' }}>
-                {isProfitPositive ? '+' : ''}${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} all time
-            </p>
+        
+        <div style={{display: 'flex', gap: '20px'}}>
+            <div className="portfolio-summary glass-panel" style={{textAlign: 'center', flex:1}}>
+                <h3>Buying Power</h3>
+                <h2 className="total-value" style={{color: 'white'}}>${balance.toLocaleString(undefined, {minimumFractionDigits: 2})}</h2>
+                <button 
+                  className="add-btn" 
+                  style={{marginTop: '10px', fontSize: '0.85rem', padding: '8px 12px'}}
+                  onClick={handleDeposit}
+                >
+                    + Add $5,000
+                </button>
+            </div>
+            
+            <div className="portfolio-summary glass-panel" style={{flex: 1}}>
+                <h3>Total Invested Equity</h3>
+                <h2 className="total-value">${totalEquity.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+                <p style={{ color: isProfitPositive ? '#10b981' : '#ef4444', margin: '5px 0 0 0', fontWeight: '500' }}>
+                    {isProfitPositive ? '+' : ''}${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} all time
+                </p>
+            </div>
         </div>
       </header>
 
@@ -55,6 +78,11 @@ export default function Portfolio() {
         <div className="empty-state">Fetching live market values...</div>
       ) : (
         <div className="portfolio-grid grid-layout">
+          {holdings.length === 0 && (
+              <div className="empty-state" style={{gridColumn: '1 / -1'}}>
+                  You haven't bought any stocks yet! Head over to the Discover page to start trading.
+              </div>
+          )}
           {holdings.map((stock, i) => {
               const stockEquity = stock.quantity * stock.currentPrice;
               const stockProfit = stockEquity - (stock.quantity * stock.avgPrice);

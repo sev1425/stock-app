@@ -3,9 +3,9 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Navigation() {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, balance, logout } = useAuth();
 
-  // Don't show navigation on the login page
+  // Don't show navigation on the login page!
   if (location.pathname === '/login') return null;
 
   const navLinks = [
@@ -32,6 +32,9 @@ export default function Navigation() {
         ))}
       </div>
       <div className="nav-profile">
+        <div className="balance-badge" title="Simulated Buying Power">
+            💵 ${balance.toLocaleString()}
+        </div>
         <div className="avatar" title={user}>{user ? user.charAt(0).toUpperCase() : 'U'}</div>
         <button className="logout-btn" onClick={logout}>Sign Out</button>
       </div>
