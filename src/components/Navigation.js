@@ -5,11 +5,12 @@ export default function Navigation() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  // Don't show navigation on the login page!
+  // Don't show navigation on the login page
   if (location.pathname === '/login') return null;
 
   const navLinks = [
     { path: "/", label: "Dashboard" },
+    { path: "/discover", label: "Discover" },
     { path: "/portfolio", label: "Portfolio" },
     { path: "/news", label: "Market News" }
   ];

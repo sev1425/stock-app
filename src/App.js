@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import Portfolio from "./pages/Portfolio";
 import News from "./pages/News";
 import Login from "./pages/Login";
+import Discover from "./pages/Discover";
 
 function App() {
   return (
@@ -15,24 +16,19 @@ function App() {
           <Navigation />
           <main className="main-content">
               <Routes>
-                {/* Public Route */}
                 <Route path="/login" element={<Login />} />
 
-                {/* Secure Routes */}
                 <Route path="/" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
+                  <ProtectedRoute><Dashboard /></ProtectedRoute>
+                } />
+                <Route path="/discover" element={
+                  <ProtectedRoute><Discover /></ProtectedRoute>
                 } />
                 <Route path="/portfolio" element={
-                  <ProtectedRoute>
-                    <Portfolio />
-                  </ProtectedRoute>
+                  <ProtectedRoute><Portfolio /></ProtectedRoute>
                 } />
                 <Route path="/news" element={
-                  <ProtectedRoute>
-                    <News />
-                  </ProtectedRoute>
+                  <ProtectedRoute><News /></ProtectedRoute>
                 } />
               </Routes>
           </main>
