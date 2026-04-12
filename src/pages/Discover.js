@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import TradeModal from "../components/TradeModal";
+import { apiGet } from "../services/api";
 
 export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,13 +25,14 @@ export default function Discover() {
       
       setIsSearching(true);
       try {
-          const res = await fetch(`/api/search?q=${searchQuery}`);
-          const data = await res.json();
-          setSearchResults(data);
-      } catch (err) {
-          console.error("Search failed", err);
+        const data = await apiGet(
+          `/api/search?q=${encodeURIComponent(searchQuery.trim())}`
+        );
+        setSearchResults(Array.isArray(data) ? data : []);
+      } catch {
+        setSearchResults([]);
       } finally {
-          setIsSearching(false);
+        setIsSearching(false);
       }
   };
 
@@ -48,7 +50,10 @@ export default function Discover() {
   return (
     <div className="page-content fade-in">
       <header className="page-header">
-        <h1>Global Market Discovery</h1>
+        <div>
+          <h1>Discover</h1>
+          <p className="page-subtitle">Search equities and open paper trades</p>
+        </div>
         
         <form onSubmit={handleSearch} className="controls-container" style={{width: '100%', maxWidth: '500px'}}>
             <input
@@ -70,18 +75,20 @@ export default function Discover() {
               <h2 className="industry-title" style={{color:'white'}}>Search Results for "{searchQuery}"</h2>
               <div className="discover-grid">
               {searchResults.map(stock => {
-                const isOwned = myStocks.includes(stock.symbol);
+                const owned = myStocks.includes(stock.symbol);
                 return (
-                  <div key={stock.symbol} className="discover-card" style={{background: 'rgba(59, 130, 246, 0.05)'}}>
+                  <div key={stock.symbol} className={`discover-card discover-card--search ${owned ? "owned" : ""}`}>
                     <div className="discover-info">
                       <span className="discover-symbol">{stock.symbol}</span>
                       <span className="discover-name">{stock.name}</span>
                     </div>
                     <button 
-                      className={`add-btn discover-btn`}
-                      onClick={() => setTradeTarget({symbol: stock.symbol, name: stock.name})}
+                      type="button"
+                      className={`add-btn discover-btn${owned ? " disabled" : ""}`}
+                      onClick={() => !owned && setTradeTarget({symbol: stock.symbol, name: stock.name})}
+                      disabled={owned}
                     >
-                      Trade
+                      {owned ? "On watchlist" : "Trade"}
                     </button>
                   </div>
                 )
@@ -97,17 +104,20 @@ export default function Discover() {
             <h2 className="industry-title">{industry.name}</h2>
             <div className="discover-grid">
               {industry.stocks.map(stock => {
+                const owned = myStocks.includes(stock.symbol);
                 return (
-                  <div key={stock.symbol} className="discover-card">
+                  <div key={stock.symbol} className={`discover-card${owned ? " owned" : ""}`}>
                     <div className="discover-info">
                       <span className="discover-symbol">{stock.symbol}</span>
                       <span className="discover-name">{stock.name}</span>
                     </div>
                     <button 
-                      className="add-btn discover-btn"
-                      onClick={() => setTradeTarget({symbol: stock.symbol, name: stock.name})}
+                      type="button"
+                      className={`add-btn discover-btn${owned ? " disabled" : ""}`}
+                      onClick={() => !owned && setTradeTarget({symbol: stock.symbol, name: stock.name})}
+                      disabled={owned}
                     >
-                      Trade
+                      {owned ? "On watchlist" : "Trade"}
                     </button>
                   </div>
                 )

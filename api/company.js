@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   const { symbol } = req.query;
 
   if (!symbol) {
-    return res.status(400).json({ error: "Missing symbol" });
+    return res.status(400).json({ error: "Missing stock symbol" });
   }
 
   const TOKEN = getFinnhubTokenOrError(res);
@@ -12,23 +12,23 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(
+      `https://finnhub.io/api/v1/stock/profile2?symbol=${encodeURIComponent(
         symbol.toUpperCase()
       )}&token=${TOKEN}`
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch: ${response.statusText}`);
+      throw new Error("Failed to fetch company profile");
     }
 
     const data = await response.json();
 
-    res.status(200).json({
-      price: data.c ?? null,
-      change: data.dp ?? 0,
-      symbol: symbol.toUpperCase(),
-    });
+    if (!data.name) {
+      return res.status(404).json({ error: "Company profile not found" });
+    }
+
+    res.status(200).json(data);
   } catch {
-    res.status(502).json({ error: "Failed to fetch stock data" });
+    res.status(500).json({ error: "Failed to load company profile" });
   }
 }

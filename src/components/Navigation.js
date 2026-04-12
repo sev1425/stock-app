@@ -12,13 +12,15 @@ export default function Navigation() {
     { path: "/", label: "Dashboard" },
     { path: "/discover", label: "Discover" },
     { path: "/portfolio", label: "Portfolio" },
-    { path: "/news", label: "Market News" }
+    { path: "/ledger", label: "Activity" },
+    { path: "/news", label: "News" },
+    { path: "/settings", label: "Settings" },
   ];
 
   return (
     <nav className="top-nav glass-panel">
       <div className="nav-brand">
-        <h2>📈 StockPro</h2>
+        <h2>StockPro</h2>
       </div>
       <div className="nav-links">
         {navLinks.map((link) => (
@@ -32,8 +34,8 @@ export default function Navigation() {
         ))}
       </div>
       <div className="nav-profile">
-        <div className="balance-badge" title="Simulated Buying Power">
-            💵 ${balance.toLocaleString()}
+        <div className="balance-badge" title="Simulated buying power">
+            ${balance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
         </div>
         <div className="avatar" title={user}>{user ? user.charAt(0).toUpperCase() : 'U'}</div>
         <button className="logout-btn" onClick={logout}>Sign Out</button>

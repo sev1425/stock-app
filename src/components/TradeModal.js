@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiGet } from '../services/api';
 
 export default function TradeModal({ symbol, name, onClose }) {
-  const { user, balance, updateBalance } = useAuth();
-  const [shares, setShares] = useState(1);
+  const { balance, updateBalance } = useAuth();
+  const [shares, setShares] = useState("1");
   const [currentPrice, setCurrentPrice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -12,10 +13,12 @@ export default function TradeModal({ symbol, name, onClose }) {
   useEffect(() => {
     async function getPrice() {
       try {
-        const res = await fetch(`/api/price?symbol=${symbol}`);
-        const data = await res.json();
-        setCurrentPrice(data.price);
-      } catch (err) {
+        const data = await apiGet(
+          `/api/price?symbol=${encodeURIComponent(symbol)}`
+        );
+        if (data.price != null) setCurrentPrice(Number(data.price));
+        else setError('No quote available for this symbol');
+      } catch {
         setError('Failed to fetch live price');
       } finally {
         setLoading(false);
@@ -24,12 +27,17 @@ export default function TradeModal({ symbol, name, onClose }) {
     getPrice();
   }, [symbol]);
 
-  const totalCost = (shares * currentPrice) || 0;
+  const qty = Math.max(0, parseInt(String(shares), 10) || 0);
+  const totalCost = currentPrice != null ? qty * currentPrice : 0;
   
   const executeTrade = () => {
       setError('');
-      if (shares <= 0) {
+      if (qty <= 0) {
           setError('Shares must be greater than 0');
+          return;
+      }
+      if (currentPrice == null) {
+          setError('Price not loaded yet');
           return;
       }
       if (totalCost > balance) {
@@ -50,7 +58,7 @@ export default function TradeModal({ symbol, name, onClose }) {
           // Recalculate average price safely
           const oldTotalValue = pos.quantity * pos.avgPrice;
           const newTotalValue = oldTotalValue + totalCost;
-          const newQuantity = pos.quantity + Number(shares);
+          const newQuantity = pos.quantity + qty;
           
           currentPortfolio[existingPosIndex].quantity = newQuantity;
           currentPortfolio[existingPosIndex].avgPrice = newTotalValue / newQuantity;
@@ -58,11 +66,10 @@ export default function TradeModal({ symbol, name, onClose }) {
           currentPortfolio.push({
               symbol: symbol,
               name: name || symbol,
-              quantity: Number(shares),
+              quantity: qty,
               avgPrice: currentPrice
           });
       }
-      
       localStorage.setItem("portfolio", JSON.stringify(currentPortfolio));
       
       // Auto add to watchlist if not there
@@ -72,7 +79,20 @@ export default function TradeModal({ symbol, name, onClose }) {
           localStorage.setItem("stocks", JSON.stringify(currentWatchlist));
       }
 
-      setSuccess(`Successfully bought ${shares} shares of ${symbol}!`);
+      // ++ MEGA EXPANSION: Save to Transaction Ledger ++
+      let currentLedger = JSON.parse(localStorage.getItem("ledger")) || [];
+      currentLedger.unshift({
+          id: Date.now(),
+          type: "BUY",
+          symbol: symbol,
+          shares: qty,
+          price: currentPrice,
+          total: totalCost,
+          date: new Date().toISOString()
+      });
+      localStorage.setItem("ledger", JSON.stringify(currentLedger));
+
+      setSuccess(`Successfully bought ${qty} shares of ${symbol}!`);
       setTimeout(() => {
           onClose(); // close modal after success
       }, 1500);
@@ -90,7 +110,7 @@ export default function TradeModal({ symbol, name, onClose }) {
             <p>Fetching market liquidity...</p>
         ) : (
             <div className="modal-body">
-                <p style={{color: 'var(--text-secondary)'}}>Current Market Price: <strong style={{color:'white'}}>${(currentPrice || 0).toFixed(2)}</strong></p>
+                <p style={{color: 'var(--text-secondary)'}}>Current Market Price: <strong style={{color:'var(--text-primary)'}}>${(currentPrice || 0).toFixed(2)}</strong></p>
                 
                 <div className="input-group" style={{marginTop: '20px'}}>
                     <label>Number of Shares</label>
@@ -98,7 +118,9 @@ export default function TradeModal({ symbol, name, onClose }) {
                         type="number" 
                         min="1"
                         value={shares} 
-                        onChange={(e) => setShares(e.target.value)} 
+                        onChange={(e) =>
+                          setShares(e.target.value.replace(/\D/g, "") || "0")
+                        }
                     />
                 </div>
 
@@ -123,7 +145,7 @@ export default function TradeModal({ symbol, name, onClose }) {
                         className="add-btn" 
                         style={{width: '100%', marginTop: '20px'}}
                         onClick={executeTrade}
-                        disabled={totalCost > balance || shares <= 0}
+                        disabled={totalCost > balance || qty <= 0 || currentPrice == null}
                     >
                         Execute Trade
                     </button>

@@ -5,15 +5,25 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [balance, setBalance] = useState(0);
+  const [theme, setTheme] = useState('dark');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Basic startup checks
+    // Startup checks
     const storedUser = localStorage.getItem('auth_user');
+    
+    // Check Theme
+    const savedTheme = localStorage.getItem('app_theme');
+    if (savedTheme) {
+        setTheme(savedTheme);
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+        }
+    }
+
     if (storedUser) {
       setUser(storedUser);
-      // Load their personal bank account, or give them $10,000 for paper trading!
-      const storedBalance = localStorage.getItem(`auth_bal_${storedUser}`);
+      let storedBalance = localStorage.getItem(`auth_bal_${storedUser}`);
       if (storedBalance) {
           setBalance(Number(storedBalance));
       } else {
@@ -58,8 +68,29 @@ export function AuthProvider({ children }) {
       localStorage.setItem(`auth_bal_${user}`, newAmount);
   };
 
+  const toggleTheme = () => {
+      const newTheme = theme === 'dark' ? 'light' : 'dark';
+      setTheme(newTheme);
+      localStorage.setItem('app_theme', newTheme);
+      if (newTheme === 'light') {
+          document.body.classList.add('light-theme');
+      } else {
+          document.body.classList.remove('light-theme');
+      }
+  };
+
+  const resetAccount = () => {
+      // Brutally wipe all data!
+      updateBalance(10000);
+      localStorage.removeItem("portfolio");
+      localStorage.removeItem("stocks");
+      localStorage.removeItem("ledger");
+      alert("Bankruptcy declared! Account has been totally reset. Wait for reload...");
+      window.location.reload();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, balance, updateBalance, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, balance, theme, toggleTheme, resetAccount, updateBalance, login, logout, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

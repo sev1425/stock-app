@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from '../context/AuthContext';
+import { apiGet } from "../services/api";
 
 export default function Portfolio() {
   const { balance, updateBalance } = useAuth();
@@ -19,11 +20,13 @@ export default function Portfolio() {
 
         const updatedHoldings = await Promise.all(saved.map(async (holding) => {
             try {
-                const res = await fetch(`/api/price?symbol=${holding.symbol}`);
-                const data = await res.json();
+                const data = await apiGet(
+                  `/api/price?symbol=${encodeURIComponent(holding.symbol)}`
+                );
+                const p = data.price != null ? Number(data.price) : null;
                 return {
                     ...holding,
-                    currentPrice: data.price
+                    currentPrice: p ?? holding.avgPrice,
                 };
             } catch {
                 return { ...holding, currentPrice: holding.avgPrice };
@@ -37,7 +40,11 @@ export default function Portfolio() {
     loadLivePrices();
   }, []);
 
-  const totalEquity = holdings.reduce((sum, item) => sum + (item.quantity * (item.currentPrice || item.avgPrice)), 0);
+  const totalEquity = holdings.reduce(
+    (sum, item) =>
+      sum + item.quantity * (item.currentPrice ?? item.avgPrice ?? 0),
+    0
+  );
   const totalCostBasis = holdings.reduce((sum, item) => sum + (item.quantity * item.avgPrice), 0);
   const totalProfit = totalEquity - totalCostBasis;
   const isProfitPositive = totalProfit >= 0;
@@ -49,7 +56,10 @@ export default function Portfolio() {
   return (
     <div className="page-content fade-in">
       <header className="page-header">
-        <h1>My Portfolio (Live)</h1>
+        <div>
+          <h1>Portfolio</h1>
+          <p className="page-subtitle">Positions marked to market</p>
+        </div>
         
         <div style={{display: 'flex', gap: '20px'}}>
             <div className="portfolio-summary glass-panel" style={{textAlign: 'center', flex:1}}>
@@ -84,7 +94,8 @@ export default function Portfolio() {
               </div>
           )}
           {holdings.map((stock, i) => {
-              const stockEquity = stock.quantity * stock.currentPrice;
+              const px = stock.currentPrice ?? stock.avgPrice ?? 0;
+              const stockEquity = stock.quantity * px;
               const stockProfit = stockEquity - (stock.quantity * stock.avgPrice);
               const pPositive = stockProfit >= 0;
 
@@ -95,7 +106,7 @@ export default function Portfolio() {
                       <span className="holding-qty">{stock.quantity} Shares</span>
                   </div>
                   <div className="holding-stats">
-                      <p>Current Price: <span style={{color: 'white'}}>${(stock.currentPrice || stock.avgPrice || 0).toFixed(2)}</span></p>
+                      <p>Current Price: <span style={{color: 'white'}}>${px.toFixed(2)}</span></p>
                       <p>Avg Buy Price: ${(stock.avgPrice || 0).toFixed(2)}</p>
                       <hr style={{ borderColor: 'rgba(255,255,255,0.05)', margin: '10px 0' }} />
                       <p>Total Equity: <span style={{color: 'white'}}>${stockEquity.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>

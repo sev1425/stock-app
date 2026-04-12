@@ -14,8 +14,13 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "http-proxy-middleware": "^2.0.9"
+  },
   "scripts": {
     "start": "react-scripts start",
+    "start:with-api": "cross-env PROXY_API_TARGET=http://127.0.0.1:3001 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

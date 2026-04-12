@@ -7,6 +7,8 @@ import Portfolio from "./pages/Portfolio";
 import News from "./pages/News";
 import Login from "./pages/Login";
 import Discover from "./pages/Discover";
+import Ledger from "./pages/Ledger";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -29,6 +31,12 @@ function App() {
                 } />
                 <Route path="/news" element={
                   <ProtectedRoute><News /></ProtectedRoute>
+                } />
+                <Route path="/ledger" element={
+                  <ProtectedRoute><Ledger /></ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute><Settings /></ProtectedRoute>
                 } />
               </Routes>
           </main>
