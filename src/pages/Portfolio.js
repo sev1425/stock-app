@@ -53,6 +53,18 @@ export default function Portfolio() {
       updateBalance(balance + 5000);
   };
 
+  const handleSell = (stockSymbol, quantity, currentPrice) => {
+      const storedVal = JSON.parse(localStorage.getItem("portfolio")) || [];
+      const updated = storedVal.filter(item => item.symbol !== stockSymbol);
+      localStorage.setItem("portfolio", JSON.stringify(updated));
+      
+      const proceeds = quantity * currentPrice;
+      updateBalance(balance + proceeds);
+      
+      setHoldings(holdings.filter(item => item.symbol !== stockSymbol));
+      alert(`Successfully sold ${quantity} shares of ${stockSymbol} for $${proceeds.toFixed(2)}`);
+  };
+
   return (
     <div className="page-content fade-in">
       <header className="page-header">
@@ -110,9 +122,16 @@ export default function Portfolio() {
                       <p>Avg Buy Price: ${(stock.avgPrice || 0).toFixed(2)}</p>
                       <hr style={{ borderColor: 'rgba(255,255,255,0.05)', margin: '10px 0' }} />
                       <p>Total Equity: <span style={{color: 'white'}}>${stockEquity.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>
-                      <p style={{ color: pPositive ? '#10b981' : '#ef4444' }}>
+                      <p style={{ color: pPositive ? '#10b981' : '#ef4444', marginBottom: '10px' }}>
                          P/L: {pPositive ? '+' : ''}${stockProfit.toFixed(2)}
                       </p>
+                      <button 
+                        className="logout-btn" 
+                        style={{width: '100%', textAlign: 'center', marginTop: '10px'}}
+                        onClick={() => handleSell(stock.symbol, stock.quantity, px)}
+                      >
+                         Sell Position
+                      </button>
                   </div>
               </div>
               )

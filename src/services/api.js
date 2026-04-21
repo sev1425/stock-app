@@ -9,12 +9,14 @@ export async function apiGet(path) {
   const p = path.startsWith("/") ? path : `/${path}`;
   const url = `${apiBase()}${p}`;
   const res = await fetch(url);
+  
   let data;
   try {
     data = await res.json();
   } catch {
     data = {};
   }
+  
   if (!res.ok) {
     const message =
       typeof data.error === "string"

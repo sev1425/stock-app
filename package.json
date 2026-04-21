@@ -8,19 +8,25 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "chart.js": "^4.5.1",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "yahoo-finance2": "^3.14.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
     "http-proxy-middleware": "^2.0.9"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "start:with-api": "cross-env PROXY_API_TARGET=http://127.0.0.1:3001 react-scripts start",
+    "start": "concurrently \"node server.js\" \"cross-env PROXY_API_TARGET=http://127.0.0.1:3001 react-scripts start\"",
+    "start:client": "react-scripts start",
+    "start:server": "node server.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navigation from "./components/Navigation";
+import TickerTape from "./components/TickerTape";
 import Dashboard from "./pages/Dashboard";
 import Portfolio from "./pages/Portfolio";
 import News from "./pages/News";
@@ -9,12 +10,14 @@ import Login from "./pages/Login";
 import Discover from "./pages/Discover";
 import Ledger from "./pages/Ledger";
 import Settings from "./pages/Settings";
+import Options from "./pages/Options";
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <div className="app-container">
+          <TickerTape />
           <Navigation />
           <main className="main-content">
               <Routes>
@@ -34,6 +37,9 @@ function App() {
                 } />
                 <Route path="/ledger" element={
                   <ProtectedRoute><Ledger /></ProtectedRoute>
+                } />
+                <Route path="/options" element={
+                  <ProtectedRoute><Options /></ProtectedRoute>
                 } />
                 <Route path="/settings" element={
                   <ProtectedRoute><Settings /></ProtectedRoute>

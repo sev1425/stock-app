@@ -12,6 +12,7 @@ export default function Navigation() {
     { path: "/", label: "Dashboard" },
     { path: "/discover", label: "Discover" },
     { path: "/portfolio", label: "Portfolio" },
+    { path: "/options", label: "Options" },
     { path: "/ledger", label: "Activity" },
     { path: "/news", label: "News" },
     { path: "/settings", label: "Settings" },
