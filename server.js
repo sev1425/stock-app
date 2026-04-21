@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const YahooFinance = require('yahoo-finance2').default;
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
@@ -137,6 +138,12 @@ app.get('/api/search', async (req, res) => {
 // 7. Health
 app.get('/api/health', (req, res) => {
     res.json({ status: "ok", backend: "express-yahoo-finance" });
+});
+
+// Production: Serve React frontend from the build folder
+app.use(express.static(path.join(__dirname, 'build')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 app.listen(PORT, () => {

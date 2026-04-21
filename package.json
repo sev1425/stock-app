@@ -25,6 +25,7 @@
   },
   "scripts": {
     "start": "concurrently \"node server.js\" \"cross-env PROXY_API_TARGET=http://127.0.0.1:3001 react-scripts start\"",
+    "start:prod": "node server.js",
     "start:client": "react-scripts start",
     "start:server": "node server.js",
     "build": "react-scripts build",
