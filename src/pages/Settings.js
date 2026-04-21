@@ -50,25 +50,26 @@ export default function Settings() {
         <section className="glass-panel settings-card">
           <h2 className="settings-card__title">Market data</h2>
           <p className="settings-card__muted">
-            Backend health and Finnhub configuration (server-side only).
+            Backend connection health to Yahoo Finance proxy.
           </p>
           <div className="settings-health">
             {health && (
               <ul className="settings-health__list">
                 <li>
-                  API:{" "}
-                  <span className={health.ok ? "text-ok" : "text-bad"}>
-                    {health.ok ? "Reachable" : "Unreachable"}
+                  Local API:{" "}
+                  <span className={health.status === 'ok' ? "text-ok" : "text-bad"} style={{ color: health.status === 'ok' ? '#10b981' : '#ef4444' }}>
+                    {health.status === 'ok' ? "Reachable" : "Unreachable"}
                   </span>
                 </li>
                 <li>
-                  Finnhub key:{" "}
+                  Data Source:{" "}
                   <span
                     className={
-                      health.finnhubConfigured ? "text-ok" : "text-warn"
+                      health.backend === 'express-yahoo-finance' ? "text-ok" : "text-warn"
                     }
+                    style={{ color: health.backend === 'express-yahoo-finance' ? '#10b981' : '#ef4444' }}
                   >
-                    {health.finnhubConfigured ? "Configured" : "Missing"}
+                    {health.backend === 'express-yahoo-finance' ? "Yahoo Finance (Active)" : "Missing"}
                   </span>
                 </li>
               </ul>
