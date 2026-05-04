@@ -1,33 +1,31 @@
-import YahooFinanceLib from 'yahoo-finance2';
-const yahooFinance = new YahooFinanceLib();
-yahooFinance.suppressNotices(['yahooSurvey', 'ripHistorical']);
-
 export default async function handler(req, res) {
   const { symbol, days = 14 } = req.query;
-  try {
-    const period1 = new Date();
-    period1.setDate(period1.getDate() - Number(days));
-    
-    // yahooFinance uses Date objects for period1 and period2
-    const h = await yahooFinance.historical(symbol, {
-      period1,
-      period2: new Date(),
-      interval: '1d'
-    });
+  if (!symbol) return res.status(400).json({ error: "Missing symbol" });
 
-    if (!h || h.length === 0) {
+  try {
+    const token = process.env.FINNHUB_API_KEY;
+    if (!token) throw new Error("Missing FINNHUB_API_KEY");
+
+    const to = Math.floor(Date.now() / 1000);
+    const from = to - (Number(days) * 24 * 60 * 60);
+
+    const response = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol.toUpperCase()}&resolution=D&from=${from}&to=${to}&token=${token}`);
+    const data = await response.json();
+
+    if (data.s !== "ok" || !data.c || data.c.length === 0) {
       return res.status(200).json({ noData: true });
     }
 
-    const labels = h.map(x => x.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
-    const prices = h.map(x => x.close);
-    const times = h.map(x => Math.floor(x.date.getTime() / 1000));
+    const labels = data.t.map(timestamp => {
+      const date = new Date(timestamp * 1000);
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+    
+    const prices = data.c;
+    const times = data.t;
     
     res.status(200).json({ labels, prices, times });
   } catch (err) {
-    if (err.message && err.message.includes('No data')) {
-        return res.status(200).json({ noData: true });
-    }
     res.status(502).json({ error: "Failed to fetch historical data" });
   }
 }
