@@ -1,31 +1,20 @@
-import { getFinnhubTokenOrError } from "../lib/finnhub.js";
+import YahooFinanceLib from 'yahoo-finance2';
+const yahooFinance = new YahooFinanceLib();
+yahooFinance.suppressNotices(['yahooSurvey', 'ripHistorical']);
 
 export default async function handler(req, res) {
-  const TOKEN = getFinnhubTokenOrError(res);
-  if (!TOKEN) return;
-
-  try {
-    const response = await fetch(
-      `https://finnhub.io/api/v1/news?category=general&token=${TOKEN}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch: ${response.statusText}`);
+    try {
+        const query = await yahooFinance.search('AAPL');
+        const news = query.news.slice(0, 5).map(n => ({
+            id: n.uuid,
+            headline: n.title,
+            url: n.link,
+            source: n.publisher || 'Yahoo Finance',
+            summary: n.title,
+            datetime: Math.floor(new Date(n.providerPublishTime * 1000).getTime() / 1000)
+        }));
+        res.status(200).json(news);
+    } catch {
+        res.status(502).json({ error: "Failed to fetch news" });
     }
-
-    const data = await response.json();
-
-    const topNews = data.slice(0, 10).map((article) => ({
-      id: article.id,
-      headline: article.headline,
-      source: article.source,
-      url: article.url,
-      summary: article.summary,
-      datetime: article.datetime,
-    }));
-
-    res.status(200).json(topNews);
-  } catch {
-    res.status(500).json({ error: "Failed to fetch market news" });
-  }
 }

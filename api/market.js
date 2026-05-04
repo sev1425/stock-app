@@ -1,37 +1,24 @@
-import { getFinnhubTokenOrError } from "../lib/finnhub.js";
-
-const BENCHMARKS = [
-  { symbol: "SPY", label: "S&P 500" },
-  { symbol: "QQQ", label: "Nasdaq 100" },
-  { symbol: "DIA", label: "Dow" },
-  { symbol: "IWM", label: "Russell 2000" },
-];
+import YahooFinanceLib from 'yahoo-finance2';
+const yahooFinance = new YahooFinanceLib();
+yahooFinance.suppressNotices(['yahooSurvey', 'ripHistorical']);
 
 export default async function handler(req, res) {
-  const TOKEN = getFinnhubTokenOrError(res);
-  if (!TOKEN) return;
-
+  const benchmarks = [
+    { symbol: '^GSPC', label: 'S&P 500' },
+    { symbol: '^NDX', label: 'Nasdaq 100' },
+    { symbol: '^DJI', label: 'Dow' }
+  ];
   try {
-    const results = await Promise.all(
-      BENCHMARKS.map(async ({ symbol, label }) => {
-        const r = await fetch(
-          `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${TOKEN}`
-        );
-        if (!r.ok) {
-          return { symbol, label, price: null, change: null };
-        }
-        const d = await r.json();
-        return {
-          symbol,
-          label,
-          price: d.c ?? null,
-          change: d.dp ?? null,
-        };
-      })
-    );
-
+    const results = await Promise.all(benchmarks.map(async b => {
+      try {
+        const quote = await yahooFinance.quote(b.symbol);
+        return { symbol: b.label, price: quote.regularMarketPrice, change: quote.regularMarketChange, changePercent: quote.regularMarketChangePercent };
+      } catch {
+        return { symbol: b.label, price: null, change: null, changePercent: null };
+      }
+    }));
     res.status(200).json(results);
-  } catch {
-    res.status(502).json({ error: "Failed to load market snapshot" });
+  } catch (err) {
+    res.status(502).json({ error: "Failed to fetch market indices" });
   }
 }

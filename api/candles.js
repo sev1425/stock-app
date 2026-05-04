@@ -1,52 +1,33 @@
-import { getFinnhubTokenOrError } from "../lib/finnhub.js";
+import YahooFinanceLib from 'yahoo-finance2';
+const yahooFinance = new YahooFinanceLib();
+yahooFinance.suppressNotices(['yahooSurvey', 'ripHistorical']);
 
 export default async function handler(req, res) {
-  const { symbol } = req.query;
-  const days = Math.min(Math.max(Number(req.query.days) || 14, 5), 365);
-
-  if (!symbol) {
-    return res.status(400).json({ error: "Missing symbol" });
-  }
-
-  const TOKEN = getFinnhubTokenOrError(res);
-  if (!TOKEN) return;
-
-  const to = Math.floor(Date.now() / 1000);
-  const from = to - days * 86400;
-
+  const { symbol, days = 14 } = req.query;
   try {
-    const url = new URL("https://finnhub.io/api/v1/stock/candle");
-    url.searchParams.set("symbol", symbol.toUpperCase());
-    url.searchParams.set("resolution", "D");
-    url.searchParams.set("from", String(from));
-    url.searchParams.set("to", String(to));
-    url.searchParams.set("token", TOKEN);
+    const period1 = new Date();
+    period1.setDate(period1.getDate() - Number(days));
+    
+    // yahooFinance uses Date objects for period1 and period2
+    const h = await yahooFinance.historical(symbol, {
+      period1,
+      period2: new Date(),
+      interval: '1d'
+    });
 
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error("Candle request failed");
-    }
-
-    const data = await response.json();
-
-    if (data.s === "no_data" || !data.c?.length) {
+    if (!h || h.length === 0) {
       return res.status(200).json({ noData: true });
     }
 
-    const labels = data.t.map((t) =>
-      new Date(t * 1000).toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-      })
-    );
-
-    res.status(200).json({
-      labels,
-      prices: data.c,
-      times: data.t,
-    });
-  } catch {
-    res.status(502).json({ error: "Failed to load chart data" });
+    const labels = h.map(x => x.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+    const prices = h.map(x => x.close);
+    const times = h.map(x => Math.floor(x.date.getTime() / 1000));
+    
+    res.status(200).json({ labels, prices, times });
+  } catch (err) {
+    if (err.message && err.message.includes('No data')) {
+        return res.status(200).json({ noData: true });
+    }
+    res.status(502).json({ error: "Failed to fetch historical data" });
   }
 }
