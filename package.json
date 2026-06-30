@@ -25,6 +25,8 @@
   "scripts": {
     "start": "react-scripts start",
     "start:server": "node server.js",
+    "deploy": "npx vercel",
+    "deploy:prod": "npx vercel --prod",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

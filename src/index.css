@@ -857,6 +857,49 @@ h1, h2, h3 {
   line-height: 1.8;
 }
 
+.settings-inline-code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.88em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.settings-health__link-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 4px;
+}
+
+.settings-health__label {
+  flex: 0 0 100%;
+}
+
+@media (min-width: 520px) {
+  .settings-health__label {
+    flex: 0 0 auto;
+  }
+}
+
+.settings-public-url {
+  color: var(--accent, #38bdf8);
+  word-break: break-all;
+  text-decoration: none;
+  max-width: 100%;
+}
+
+.settings-public-url:hover {
+  text-decoration: underline;
+}
+
+.settings-action--compact {
+  margin-top: 0;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
 .text-ok {
   color: var(--neon-green);
   font-weight: 600;

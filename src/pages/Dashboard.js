@@ -10,10 +10,22 @@ export default function Dashboard() {
   const [activeStock, setActiveStock] = useState(null);
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
+  /** Bumped on each new chart build so stale async completions skip `new Chart`. */
+  const chartBuildSeq = useRef(0);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("stocks")) || ["AAPL", "TSLA"];
     setStocks(saved);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      chartBuildSeq.current += 1;
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+        chartInstance.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -53,6 +65,7 @@ export default function Dashboard() {
 
     if (activeStock === removedSymbol) {
       setActiveStock(null);
+      chartBuildSeq.current += 1;
       if (chartInstance.current) {
         chartInstance.current.destroy();
         chartInstance.current = null;
@@ -64,6 +77,8 @@ export default function Dashboard() {
     setActiveStock(symbol);
     const canvas = chartRef.current;
     if (!canvas) return;
+
+    const seq = ++chartBuildSeq.current;
 
     if (chartInstance.current) {
       chartInstance.current.destroy();
@@ -118,6 +133,13 @@ export default function Dashboard() {
     );
     gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
     const lastIdx = prices.length - 1;
+
+    if (seq !== chartBuildSeq.current) return;
+
+    if (chartInstance.current) {
+      chartInstance.current.destroy();
+      chartInstance.current = null;
+    }
 
     chartInstance.current = new Chart(canvas, {
       type: "line",

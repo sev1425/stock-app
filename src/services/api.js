@@ -2,6 +2,16 @@ function apiBase() {
   return (process.env.REACT_APP_API_BASE_URL || "").replace(/\/$/, "");
 }
 
+/** Shown in Settings: where the browser sends `/api` requests. */
+export function getApiBaseDisplay() {
+  const base = apiBase();
+  if (base) return base;
+  if (typeof window !== "undefined") {
+    return `${window.location.origin} (same origin)`;
+  }
+  return "Same origin";
+}
+
 /**
  * GET JSON from the app API (same origin on Vercel, or REACT_APP_API_BASE_URL, or proxied /api in dev).
  */
